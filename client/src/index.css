@@ -76,10 +76,10 @@
   --chart-4: 190 85% 45%;
   --chart-5: 340 75% 60%;
 
-  --font-sans: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-serif: Georgia, serif;
   --font-mono: "SF Mono", Menlo, Monaco, "Courier New", monospace;
-  --radius: .5rem; /* 8px */
+  --radius: .375rem; /* 6px - minimalist rounded corners */
   --shadow-2xs: 0px 1px 2px 0px hsl(240 6% 10% / 0.05);
   --shadow-xs: 0px 1px 2px 0px hsl(240 6% 10% / 0.06);
   --shadow-sm: 0px 1px 2px 0px hsl(240 6% 10% / 0.05), 0px 1px 3px -1px hsl(240 6% 10% / 0.08);
@@ -132,53 +132,53 @@
   --elevate-1: rgba(255,255,255, .04);
   --elevate-2: rgba(255,255,255, .09);
 
-  --background: 240 6% 8%;
+  --background: 0 0% 10%;
 
   --foreground: 0 0% 98%;
 
-  --border: 240 5% 18%;
+  --border: 0 0% 20%;
 
-  --card: 240 5% 10%;
+  --card: 0 0% 12%;
 
   --card-foreground: 0 0% 96%;
 
-  --card-border: 240 5% 14%;
+  --card-border: 0 0% 16%;
 
-  --sidebar: 240 5% 12%;
+  --sidebar: 0 0% 11%;
 
   --sidebar-foreground: 0 0% 94%;
 
-  --sidebar-border: 240 5% 16%;
+  --sidebar-border: 0 0% 15%;
 
   --sidebar-primary: 258 100% 70%;
 
   --sidebar-primary-foreground: 0 0% 100%;
 
-  --sidebar-accent: 240 5% 16%;
+  --sidebar-accent: 0 0% 15%;
 
   --sidebar-accent-foreground: 0 0% 94%;
 
   --sidebar-ring: 258 100% 70%;
 
-  --popover: 240 5% 14%;
+  --popover: 0 0% 12%;
 
   --popover-foreground: 0 0% 94%;
 
-  --popover-border: 240 5% 18%;
+  --popover-border: 0 0% 18%;
 
   --primary: 258 100% 70%;
 
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 240 5% 18%;
+  --secondary: 0 0% 18%;
 
   --secondary-foreground: 0 0% 94%;
 
-  --muted: 240 6% 16%;
+  --muted: 0 0% 16%;
 
-  --muted-foreground: 240 5% 65%;
+  --muted-foreground: 0 0% 60%;
 
-  --accent: 240 8% 18%;
+  --accent: 0 0% 18%;
 
   --accent-foreground: 0 0% 94%;
 
@@ -186,7 +186,7 @@
 
   --destructive-foreground: 0 0% 100%;
 
-  --input: 240 8% 35%;
+  --input: 0 0% 30%;
   --ring: 258 100% 70%;
   --chart-1: 258 100% 75%;
   --chart-2: 220 90% 65%;
