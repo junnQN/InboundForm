@@ -8,6 +8,7 @@ import { AppSidebar } from "@/components/app-sidebar";
 import Form from "@/pages/form";
 import Success from "@/pages/success";
 import Admin from "@/pages/admin";
+import Analytics from "@/pages/analytics";
 import NotFound from "@/pages/not-found";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -17,6 +18,7 @@ function Router() {
       <Route path="/" component={Form} />
       <Route path="/success" component={Success} />
       <Route path="/admin" component={Admin} />
+      <Route path="/admin/analytics" component={Analytics} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -26,7 +28,7 @@ function AppContent() {
   const [location] = useLocation();
   const { isAuthenticated } = useAuth();
   
-  const showSidebar = location === "/admin" && isAuthenticated;
+  const showSidebar = (location === "/admin" || location === "/admin/analytics") && isAuthenticated;
 
   const style = {
     "--sidebar-width": "16rem",

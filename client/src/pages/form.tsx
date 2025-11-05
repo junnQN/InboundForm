@@ -58,6 +58,8 @@ export default function Form() {
   });
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [sessionId] = useState(() => crypto.randomUUID());
+  const [sessionStartTime] = useState(() => Date.now());
 
   const currentQuestion = questions[currentStep];
   const currentValue = formData[currentQuestion.id as keyof FormData];
@@ -92,10 +94,36 @@ export default function Form() {
     setErrors(prev => ({ ...prev, [field]: error }));
   };
 
+  const trackAnalytics = async (endpoint: string, data: any, method: "POST" | "PATCH" = "POST") => {
+    try {
+      await apiRequest(method, endpoint, data);
+    } catch (error) {
+      console.error("Analytics tracking failed:", error);
+    }
+  };
+
   const submitForm = async () => {
     setIsSubmitting(true);
     try {
-      await apiRequest("POST", "/api/form-submissions", formData);
+      await trackAnalytics("/api/analytics/event", {
+        sessionId,
+        step: currentStep,
+        eventType: "submit"
+      });
+
+      const response = await apiRequest("POST", "/api/form-submissions", formData);
+      const submissionData = await response.json();
+      
+      const timeToComplete = Math.floor((Date.now() - sessionStartTime) / 1000);
+      
+      if (submissionData?.id) {
+        await trackAnalytics("/api/analytics/session-complete", {
+          sessionId,
+          submissionId: submissionData.id,
+          timeToComplete
+        }, "PATCH");
+      }
+
       setLocation("/success");
     } catch (error: any) {
       console.error("Form submission error:", error);
@@ -118,6 +146,12 @@ export default function Form() {
 
     if (error) return;
 
+    trackAnalytics("/api/analytics/event", {
+      sessionId,
+      step: currentStep,
+      eventType: "next"
+    });
+
     if (currentStep < questions.length - 1) {
       setDirection(1);
       setCurrentStep(prev => prev + 1);
@@ -128,10 +162,28 @@ export default function Form() {
 
   const goToPrevious = () => {
     if (currentStep > 0) {
+      trackAnalytics("/api/analytics/event", {
+        sessionId,
+        step: currentStep,
+        eventType: "back"
+      });
+      
       setDirection(-1);
       setCurrentStep(prev => prev - 1);
     }
   };
+
+  useEffect(() => {
+    trackAnalytics("/api/analytics/session-start", { sessionId });
+  }, [sessionId]);
+
+  useEffect(() => {
+    trackAnalytics("/api/analytics/event", {
+      sessionId,
+      step: currentStep,
+      eventType: "view"
+    });
+  }, [currentStep, sessionId]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {

@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp, jsonb, index } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, timestamp, jsonb, index, integer } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -49,3 +49,28 @@ export const users = pgTable("users", {
 
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
+
+// Form analytics sessions table
+export const formSessions = pgTable("form_sessions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sessionId: text("session_id").notNull().unique(),
+  startedAt: timestamp("started_at").defaultNow().notNull(),
+  completedAt: timestamp("completed_at"),
+  submissionId: varchar("submission_id").references(() => formSubmissions.id),
+  timeToComplete: integer("time_to_complete"),
+});
+
+export type FormSession = typeof formSessions.$inferSelect;
+export type InsertFormSession = typeof formSessions.$inferInsert;
+
+// Form analytics events table
+export const formAnalyticsEvents = pgTable("form_analytics_events", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sessionId: text("session_id").notNull(),
+  step: integer("step").notNull(),
+  eventType: text("event_type").notNull(),
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+});
+
+export type FormAnalyticsEvent = typeof formAnalyticsEvents.$inferSelect;
+export type InsertFormAnalyticsEvent = typeof formAnalyticsEvents.$inferInsert;

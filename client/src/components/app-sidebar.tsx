@@ -1,4 +1,4 @@
-import { Home, FileText, LogOut } from "lucide-react";
+import { Home, FileText, LogOut, BarChart3 } from "lucide-react";
 
 import {
   Sidebar,
@@ -24,6 +24,11 @@ const items = [
     title: "Submissions",
     url: "/admin",
     icon: FileText,
+  },
+  {
+    title: "Analytics",
+    url: "/admin/analytics",
+    icon: BarChart3,
   },
 ];
 
