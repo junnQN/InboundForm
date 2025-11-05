@@ -3,9 +3,25 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertFormSubmissionSchema } from "@shared/schema";
 import { fromZodError } from "zod-validation-error";
+import { setupAuth, isAuthenticated } from "./replitAuth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Form submission endpoint
+  // Auth middleware
+  await setupAuth(app);
+
+  // Auth routes
+  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  // Form submission endpoint (public)
   app.post("/api/form-submissions", async (req, res) => {
     try {
       const validationResult = insertFormSubmissionSchema.safeParse(req.body);
@@ -26,8 +42,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get all form submissions (for potential admin view in future)
-  app.get("/api/form-submissions", async (req, res) => {
+  // Admin endpoint - Get all form submissions (protected)
+  app.get("/api/admin/submissions", isAuthenticated, async (req, res) => {
     try {
       const submissions = await storage.getAllFormSubmissions();
       res.json(submissions);
