@@ -188,6 +188,7 @@ export default function Admin() {
                   <TableRow>
                     <TableHead>Name</TableHead>
                     <TableHead>Email</TableHead>
+                    <TableHead className="hidden lg:table-cell">Referral</TableHead>
                     <TableHead className="hidden md:table-cell">Additional Info</TableHead>
                     <TableHead>Submitted At</TableHead>
                   </TableRow>
@@ -200,6 +201,19 @@ export default function Admin() {
                       </TableCell>
                       <TableCell data-testid={`text-email-${submission.id}`}>
                         {submission.email}
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell" data-testid={`text-referral-${submission.id}`}>
+                        {submission.referralSource ? (
+                          submission.referralSource === "Other" && submission.referralSourceOther ? (
+                            <span className="line-clamp-1" title={submission.referralSourceOther}>
+                              Other: {submission.referralSourceOther}
+                            </span>
+                          ) : (
+                            submission.referralSource
+                          )
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
                       </TableCell>
                       <TableCell className="hidden md:table-cell max-w-md" data-testid={`text-info-${submission.id}`}>
                         <span className="line-clamp-2">{submission.additionalInfo}</span>

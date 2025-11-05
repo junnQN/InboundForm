@@ -6,22 +6,33 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 
 type FormData = {
   name: string;
   email: string;
+  referralSource: string;
+  referralSourceOther: string;
   additionalInfo: string;
 };
 
 type ValidationErrors = {
   name?: string;
   email?: string;
+  referralSource?: string;
+  referralSourceOther?: string;
   additionalInfo?: string;
 };
 
-const questions = [
+const allQuestions = [
   {
     id: "name",
     label: "What's your name?",
@@ -35,6 +46,14 @@ const questions = [
     placeholder: "your@email.com",
     type: "email" as const,
     helper: "We'll use this to get in touch with you",
+  },
+  {
+    id: "referralSource",
+    label: "How did you hear about us?",
+    placeholder: "Select an option",
+    type: "select" as const,
+    helper: "This helps us understand how people find us",
+    options: ["Google", "Friend", "Social Media", "Other"],
   },
   {
     id: "additionalInfo",
@@ -54,6 +73,8 @@ export default function Form() {
   const [formData, setFormData] = useState<FormData>({
     name: "",
     email: "",
+    referralSource: "",
+    referralSourceOther: "",
     additionalInfo: "",
   });
   const [errors, setErrors] = useState<ValidationErrors>({});
@@ -61,12 +82,20 @@ export default function Form() {
   const [sessionId] = useState(() => crypto.randomUUID());
   const [sessionStartTime] = useState(() => Date.now());
 
+  const questions = allQuestions;
   const currentQuestion = questions[currentStep];
   const currentValue = formData[currentQuestion.id as keyof FormData];
 
   const validateField = useCallback((field: keyof FormData, value: string): string | undefined => {
+    const question = allQuestions.find(q => q.id === field);
+    
+    // Skip validation for optional fields
+    if (field === "referralSource" || field === "referralSourceOther") {
+      return undefined;
+    }
+    
     if (!value.trim()) {
-      return `${questions.find(q => q.id === field)?.label.replace("?", "")} is required`;
+      return `${question?.label.replace("?", "")} is required`;
     }
     if (field === "email") {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -302,7 +331,52 @@ export default function Form() {
               </div>
 
               <div className="space-y-3">
-                {currentQuestion.type === "textarea" ? (
+                {currentQuestion.type === "select" ? (
+                  <>
+                    <Select 
+                      value={currentValue} 
+                      onValueChange={(value) => handleFieldChange(value)}
+                    >
+                      <SelectTrigger 
+                        className="text-xl border-0 border-b-2 border-muted-foreground/20 rounded-none bg-transparent px-0 py-4 focus:ring-0 focus:border-primary transition-colors"
+                        data-testid={`select-${currentQuestion.id}`}
+                      >
+                        <SelectValue placeholder={currentQuestion.placeholder} />
+                      </SelectTrigger>
+                      <SelectContent data-testid={`select-content-${currentQuestion.id}`}>
+                        {currentQuestion.options?.map((option) => (
+                          <SelectItem 
+                            key={option} 
+                            value={option}
+                            data-testid={`select-option-${option.toLowerCase().replace(/\s+/g, '-')}`}
+                          >
+                            {option}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {currentQuestion.id === "referralSource" && formData.referralSource === "Other" && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="pt-6 space-y-3"
+                      >
+                        <p className="text-xl text-foreground">Please specify where you heard about us</p>
+                        <Input
+                          type="text"
+                          value={formData.referralSourceOther}
+                          onChange={(e) => setFormData(prev => ({ ...prev, referralSourceOther: e.target.value }))}
+                          placeholder="Tell us more..."
+                          className="text-xl border-0 border-b-2 border-muted-foreground/20 rounded-none bg-transparent px-0 py-4 focus-visible:ring-0 focus-visible:border-primary transition-colors"
+                          data-testid="input-referralSourceOther"
+                        />
+                        <p className="text-sm text-muted-foreground">We appreciate you sharing this information</p>
+                      </motion.div>
+                    )}
+                  </>
+                ) : currentQuestion.type === "textarea" ? (
                   <Textarea
                     value={currentValue}
                     onChange={(e) => handleFieldChange(e.target.value)}

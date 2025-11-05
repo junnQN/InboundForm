@@ -8,6 +8,8 @@ export const formSubmissions = pgTable("form_submissions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
   email: text("email").notNull(),
+  referralSource: text("referral_source"),
+  referralSourceOther: text("referral_source_other"),
   additionalInfo: text("additional_info").notNull(),
   submittedAt: timestamp("submitted_at").defaultNow().notNull(),
 });
@@ -15,10 +17,14 @@ export const formSubmissions = pgTable("form_submissions", {
 export const insertFormSubmissionSchema = createInsertSchema(formSubmissions).pick({
   name: true,
   email: true,
+  referralSource: true,
+  referralSourceOther: true,
   additionalInfo: true,
 }).extend({
   email: z.string().email("Please enter a valid email address"),
   name: z.string().min(1, "Name is required"),
+  referralSource: z.string().optional(),
+  referralSourceOther: z.string().optional(),
   additionalInfo: z.string().min(1, "Please provide some additional information"),
 });
 

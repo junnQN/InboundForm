@@ -141,7 +141,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
 
       // Create CSV header
-      const headers = ['Name', 'Email', 'Additional Info', 'Submitted At'];
+      const headers = ['Name', 'Email', 'Referral Source', 'Referral Source (Other)', 'Additional Info', 'Submitted At'];
       const csvRows = [headers.join(',')];
 
       // Add data rows
@@ -149,6 +149,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const row = [
           escapeCSVField(submission.name),
           escapeCSVField(submission.email),
+          escapeCSVField(submission.referralSource),
+          escapeCSVField(submission.referralSourceOther),
           escapeCSVField(submission.additionalInfo),
           escapeCSVField(formatDate(new Date(submission.submittedAt)))
         ];
