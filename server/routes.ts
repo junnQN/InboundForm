@@ -113,6 +113,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Export endpoints
+  app.get("/api/admin/export/csv", isAuthenticated, async (req, res) => {
+    try {
+      const submissions = await storage.getAllFormSubmissions();
+      
+      // Helper function to escape CSV fields (RFC 4180 compliant)
+      const escapeCSVField = (field: string | null | undefined): string => {
+        const value = field ?? '';
+        if (value.includes(',') || value.includes('"') || value.includes('\n') || value.includes('\r')) {
+          return `"${value.replace(/"/g, '""')}"`;
+        }
+        return value;
+      };
+
+      // Helper function to format date
+      const formatDate = (date: Date): string => {
+        const month = date.toLocaleString('en-US', { month: 'short' });
+        const day = date.getDate();
+        const year = date.getFullYear();
+        const time = date.toLocaleString('en-US', { 
+          hour: 'numeric', 
+          minute: '2-digit', 
+          hour12: true 
+        });
+        return `${month} ${day}, ${year} ${time}`;
+      };
+
+      // Create CSV header
+      const headers = ['Name', 'Email', 'Additional Info', 'Submitted At'];
+      const csvRows = [headers.join(',')];
+
+      // Add data rows
+      for (const submission of submissions) {
+        const row = [
+          escapeCSVField(submission.name),
+          escapeCSVField(submission.email),
+          escapeCSVField(submission.additionalInfo),
+          escapeCSVField(formatDate(new Date(submission.submittedAt)))
+        ];
+        csvRows.push(row.join(','));
+      }
+
+      // RFC 4180 requires CRLF line endings
+      const csvContent = csvRows.join('\r\n');
+      const timestamp = new Date().toISOString().split('T')[0];
+      const filename = `submissions_${timestamp}.csv`;
+
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.send(csvContent);
+    } catch (error) {
+      console.error("Error exporting CSV:", error);
+      res.status(500).json({ error: "Failed to export CSV" });
+    }
+  });
+
+  app.get("/api/admin/export/json", isAuthenticated, async (req, res) => {
+    try {
+      const submissions = await storage.getAllFormSubmissions();
+      
+      const timestamp = new Date().toISOString().split('T')[0];
+      const filename = `submissions_${timestamp}.json`;
+
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.send(JSON.stringify(submissions, null, 2));
+    } catch (error) {
+      console.error("Error exporting JSON:", error);
+      res.status(500).json({ error: "Failed to export JSON" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;

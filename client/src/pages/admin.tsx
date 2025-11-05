@@ -13,19 +13,67 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Search, Loader2 } from "lucide-react";
+import { Search, Loader2, Download } from "lucide-react";
 import { format } from "date-fns";
 
 export default function Admin() {
   const { toast } = useToast();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
+  const [exportingCsv, setExportingCsv] = useState(false);
+  const [exportingJson, setExportingJson] = useState(false);
 
   const { data: submissions, isLoading, error } = useQuery<FormSubmission[]>({
     queryKey: ["/api/admin/submissions"],
     retry: false,
   });
+
+  const handleExport = async (format: 'csv' | 'json') => {
+    const setExporting = format === 'csv' ? setExportingCsv : setExportingJson;
+    
+    try {
+      setExporting(true);
+      
+      const response = await fetch(`/api/admin/export/${format}`, {
+        method: 'GET',
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error(`Export failed: ${response.statusText}`);
+      }
+
+      const blob = await response.blob();
+      const contentDisposition = response.headers.get('Content-Disposition');
+      const filenameMatch = contentDisposition?.match(/filename="(.+)"/);
+      const filename = filenameMatch ? filenameMatch[1] : `submissions_${new Date().toISOString().split('T')[0]}.${format}`;
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      toast({
+        title: "Export complete",
+        description: "Check your downloads folder",
+      });
+    } catch (error) {
+      console.error(`Error exporting ${format}:`, error);
+      toast({
+        title: "Export failed",
+        description: `Failed to export as ${format.toUpperCase()}. Please try again.`,
+        variant: "destructive",
+      });
+    } finally {
+      setExporting(false);
+    }
+  };
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -78,8 +126,8 @@ export default function Admin() {
           <CardDescription>View and search all form submissions</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="mb-6">
-            <div className="relative">
+          <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search by name or email..."
@@ -88,6 +136,44 @@ export default function Admin() {
                 className="pl-10"
                 data-testid="input-search"
               />
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => handleExport('csv')}
+                disabled={exportingCsv || exportingJson || !submissions || submissions.length === 0}
+                data-testid="button-export-csv"
+              >
+                {exportingCsv ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Exporting...
+                  </>
+                ) : (
+                  <>
+                    <Download className="h-4 w-4 mr-2" />
+                    Export as CSV
+                  </>
+                )}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => handleExport('json')}
+                disabled={exportingCsv || exportingJson || !submissions || submissions.length === 0}
+                data-testid="button-export-json"
+              >
+                {exportingJson ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Exporting...
+                  </>
+                ) : (
+                  <>
+                    <Download className="h-4 w-4 mr-2" />
+                    Export as JSON
+                  </>
+                )}
+              </Button>
             </div>
           </div>
 
